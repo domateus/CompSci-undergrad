@@ -67,7 +67,7 @@ const dijkstra = (s, input) => {
 }
 
 const buildCostMatrix = (input) => {
-    const { pathSum, oddV } = oddEdges();
+    const { oddV } = oddEdges();
     const costMatrix = []
     for (let i = 0; i < oddV.length; i++) {
         const ds = dijkstra(oddV[i], input);
@@ -82,7 +82,7 @@ const buildCostMatrix = (input) => {
     return costMatrix
 
 }
-buildCostMatrix(input)
+
 const hungarian = (input) => {
     const subMin = (input) => {
     const transpose = []
@@ -238,6 +238,118 @@ const adjustInputMatrix = (input, newVs) => {
 }
 
 const costMatrix = buildCostMatrix(input);
-const result = adjustResult(hungarian(costMatrix))
+// const result = adjustResult(hungarian(costMatrix))
 
-console.log(adjustInputMatrix(input, result))
+const findFirstV = (input) => {
+    for (let i = 0; i < input.length; i++) {
+        let dg = 0;
+        for (let j = 0; j < input[i].length; j++) {
+            if (input[i][j]) dg++;
+        }
+
+        if (dg % 2) return i
+    }
+
+    return 0;
+}
+
+const dfs = (p, s, visited, input) => {
+    let count = 1;
+    visited[s] = true;
+    for (let i = 0; i < input.length; i++) {
+        if (p !== i) {
+            if (!visited[i]) {
+                if (input[s][i]) {
+                    count += dfs(s, i, visited, input);
+                }
+            }
+        }
+    }
+    return count
+}
+
+const isBridge = (u, v, input) => {
+    let dg = 0;
+    for (let i = 0;  i < input.length; i++) {
+        if (input[v][u]) dg ++
+    }
+    return dg <= 1
+}
+
+const edges = (input) => {
+    let count = 0;
+    for (let i = 0; i < input.length; i++) {
+        for (let j = i; j < input[i].length; j++) {
+            if (input[i][j]) count++;
+        }
+    }
+
+    return count
+}
+
+// let E = edges(input);
+let V = input.length;
+const fleury = (u, input) => {
+    let matrix = input.map(l => l.map(c => c))
+    for (let i = 0; i < input.length; i++) {
+        if (matrix[u][i]) {
+            let visited = new Array(input.length).fill(false);
+
+            if (isBridge(u, i, matrix)) V--
+
+            const cnt = dfs(u, i, visited, matrix)
+
+            if (Math.abs(V - cnt) <= 2) {
+                console.log(u, "--", i, " ")
+
+                if (isBridge(i, u, matrix)) V--;
+            }
+
+            matrix[u][i] = 0
+            matrix[i][u] = 0
+            E--
+
+            fleury(i, matrix)
+        }
+    }
+}
+
+// const matrix = adjustInputMatrix(input, result)
+
+// fleury(findFirstV(matrix), matrix)
+
+const main = () => {
+    const {oddV} = oddEdges();
+
+    if (!oddV.length) {
+        // in this case, the graph is already eulerian
+        //fleury()
+
+    } else {
+        // in here we use dijkstra on the odd vertices to build a cost matrix
+        // this matrix has the weight to go from any odd vertex to any other odd vertex
+        const costMatrix = buildCostMatrix(input)
+        console.log(costMatrix, "matriz de custo")
+
+        // here we use the hungarian matching algorithm to take the minimal cost edges to add
+        const newRawEdges = hungarian(costMatrix)
+        console.log(newRawEdges, "arestas do hungaro")
+
+        // the world is a harsh place. HMA is supposed to run on bipartide graphs, but our buildCostMatrix 
+        // does not generate one, so this function fix the hungarian output to select distinct edges
+        // (it also remap the vertices, buildCostMatrix changes their index)
+        const newEdges = adjustResult(newRawEdges)
+        console.log(newEdges, "arestas ajustadas do hungaro")
+
+        // now we ought to change our graph data structure representation, the simple adjacency matrix
+        // does not handle multigraphs well, so we'll use a more suitable representation for them
+
+        // const newMatrix = parseToNewMatrix(input, newEdges)
+
+        // finally, when can use fleury's algorithm to traverse a eulerian path
+
+        //fleury()
+    }
+}
+
+main()
