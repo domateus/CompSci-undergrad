@@ -10,6 +10,21 @@ const input = [
     [0, 0, 0, 3, 0, 5, 0, 1, 0]
 ]
 
+const deepClone = (obj) => {
+  if (obj === null) return null;
+  let clone = Object.assign({}, obj);
+  Object.keys(clone).forEach(
+    key =>
+      (clone[key] =
+        typeof obj[key] === 'object' ? deepClone(obj[key]) : obj[key])
+  );
+  if (Array.isArray(obj)) {
+    clone.length = obj.length;
+    return Array.from(clone);
+  }
+  return clone;
+};
+
 const oddEdges = () => {
     let pathSum = 0;
     const oddV = [];
@@ -224,7 +239,6 @@ const adjustResult = (input) => {
 
    let adjustedPoints = input.map(p => [oddV[p[0]], oddV[p[1]], costMatrix[p[0]][p[1]]]);
 
-    adjustedPoints = adjustedPoints.splice(0, Math.floor(size));
 
     return adjustedPoints
 }
@@ -240,83 +254,87 @@ const adjustInputMatrix = (input, newVs) => {
 const costMatrix = buildCostMatrix(input);
 // const result = adjustResult(hungarian(costMatrix))
 
-const findFirstV = (input) => {
-    for (let i = 0; i < input.length; i++) {
-        let dg = 0;
-        for (let j = 0; j < input[i].length; j++) {
-            if (input[i][j]) dg++;
-        }
-
-        if (dg % 2) return i
-    }
-
-    return 0;
-}
-
 const dfs = (p, s, visited, input) => {
     let count = 1;
-    visited[s] = true;
-    for (let i = 0; i < input.length; i++) {
-        if (p !== i) {
-            if (!visited[i]) {
-                if (input[s][i]) {
-                    count += dfs(s, i, visited, input);
+    let vertex = visited.find(v => v.nv === s);
+
+    if (vertex) vertex.visited = true
+
+    input[s].es.forEach(e => {
+        if (p !== e.v) {
+            if (!visited.find(v => v.nv === e.v)?.visited) {
+                if (input[s].es.find(ed => ed.v === e.v)) {
+                    count += dfs(s, e.v, visited, input)
                 }
             }
         }
-    }
-    return count
-}
+    })
 
-const isBridge = (u, v, input) => {
-    let dg = 0;
-    for (let i = 0;  i < input.length; i++) {
-        if (input[v][u]) dg ++
-    }
-    return dg <= 1
+    
+    return count
 }
 
 const edges = (input) => {
     let count = 0;
-    for (let i = 0; i < input.length; i++) {
-        for (let j = i; j < input[i].length; j++) {
-            if (input[i][j]) count++;
-        }
-    }
-
+    input.forEach(v => count += v.es.length)
     return count
 }
 
-// let E = edges(input);
+
+const parseToNewMatrix = (input, newEdges) => {
+    let newMatrix = []
+    input.forEach((l, index) => {
+        const v = index;
+        const es = [];
+
+        l.forEach((e, col) => {
+            if (e) es.push({v: col, p: e})
+        })
+
+        newMatrix.push({v, es})
+    })
+
+    newEdges.forEach(ne => {
+        newMatrix[ne[0]].es.push({v: ne[1], p: ne[2]})
+    })
+
+    return newMatrix
+}
+
+let E = edges(parseToNewMatrix(input, adjustResult(hungarian(buildCostMatrix(input)))));
 let V = input.length;
 const fleury = (u, input) => {
-    let matrix = input.map(l => l.map(c => c))
-    for (let i = 0; i < input.length; i++) {
-        if (matrix[u][i]) {
-            let visited = new Array(input.length).fill(false);
+    let matrix = input
+    matrix[u].es.forEach(v => {
+        let visitedVs = matrix[u].es.map(e => ({nv: e.v, visited: false}))
 
-            if (isBridge(u, i, matrix)) V--
+        if (matrix[u].es.length === 1) V--
 
-            const cnt = dfs(u, i, visited, matrix)
+        const cnt = dfs(u, v.v, visitedVs, matrix);
 
-            if (Math.abs(V - cnt) <= 2) {
-                console.log(u, "--", i, " ")
+        if (Math.abs(V - cnt) <= 2) {
+            console.log(u, "--", v.v, " ")
 
-                if (isBridge(i, u, matrix)) V--;
-            }
-
-            matrix[u][i] = 0
-            matrix[i][u] = 0
-            E--
-
-            fleury(i, matrix)
+            if (matrix[v.v].es.length === 1) V--;
         }
-    }
+
+        matrix[u].es.splice(matrix[u].es.findIndex(e => e.v === v.v), 1)
+        matrix[v.v].es.splice(matrix[v.v].es.findIndex(e => e.v === u), 1)
+
+        E--
+
+        fleury(v.v, input)
+    })
+   
+        
+    
 }
 
 // const matrix = adjustInputMatrix(input, result)
 
 // fleury(findFirstV(matrix), matrix)
+
+
 
 const main = () => {
     const {oddV} = oddEdges();
@@ -329,17 +347,20 @@ const main = () => {
         // in here we use dijkstra on the odd vertices to build a cost matrix
         // this matrix has the weight to go from any odd vertex to any other odd vertex
         const costMatrix = buildCostMatrix(input)
-        console.log(costMatrix, "matriz de custo")
+        // console.log(costMatrix, "matriz de custo")
 
         // here we use the hungarian matching algorithm to take the minimal cost edges to add
         const newRawEdges = hungarian(costMatrix)
-        console.log(newRawEdges, "arestas do hungaro")
+        // console.log(newRawEdges, "arestas do hungaro")
 
         // the world is a harsh place. HMA is supposed to run on bipartide graphs, but our buildCostMatrix 
         // does not generate one, so this function fix the hungarian output to select distinct edges
         // (it also remap the vertices, buildCostMatrix changes their index)
         const newEdges = adjustResult(newRawEdges)
-        console.log(newEdges, "arestas ajustadas do hungaro")
+        // console.log(newEdges, "arestas ajustadas do hungaro")
+        const newMatrix = parseToNewMatrix(input, newEdges)
+
+        fleury(0, newMatrix)
 
         // now we ought to change our graph data structure representation, the simple adjacency matrix
         // does not handle multigraphs well, so we'll use a more suitable representation for them
