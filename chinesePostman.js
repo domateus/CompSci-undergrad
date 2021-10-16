@@ -234,11 +234,7 @@ const hungarian = (input) => {
 }
 
 const adjustResult = (input) => {
-    const size = oddV.length / 2;
-
-
    let adjustedPoints = input.map(p => [oddV[p[0]], oddV[p[1]], costMatrix[p[0]][p[1]]]);
-
 
     return adjustedPoints
 }
@@ -252,34 +248,6 @@ const adjustInputMatrix = (input, newVs) => {
 }
 
 const costMatrix = buildCostMatrix(input);
-// const result = adjustResult(hungarian(costMatrix))
-
-const dfs = (p, s, visited, input) => {
-    let count = 1;
-    let vertex = visited.find(v => v.nv === s);
-
-    if (vertex) vertex.visited = true
-
-    input[s].es.forEach(e => {
-        if (p !== e.v) {
-            if (!visited.find(v => v.nv === e.v)?.visited) {
-                if (input[s].es.find(ed => ed.v === e.v)) {
-                    count += dfs(s, e.v, visited, input)
-                }
-            }
-        }
-    })
-
-    
-    return count
-}
-
-const edges = (input) => {
-    let count = 0;
-    input.forEach(v => count += v.es.length)
-    return count
-}
-
 
 const parseToNewMatrix = (input, newEdges) => {
     let newMatrix = []
@@ -300,40 +268,6 @@ const parseToNewMatrix = (input, newEdges) => {
 
     return newMatrix
 }
-
-let E = edges(parseToNewMatrix(input, adjustResult(hungarian(buildCostMatrix(input)))));
-let V = input.length;
-const fleury = (u, input) => {
-    let matrix = input
-    matrix[u].es.forEach(v => {
-        let visitedVs = matrix[u].es.map(e => ({nv: e.v, visited: false}))
-
-        if (matrix[u].es.length === 1) V--
-
-        const cnt = dfs(u, v.v, visitedVs, matrix);
-
-        if (Math.abs(V - cnt) <= 2) {
-            console.log(u, "--", v.v, " ")
-
-            if (matrix[v.v].es.length === 1) V--;
-        }
-
-        matrix[u].es.splice(matrix[u].es.findIndex(e => e.v === v.v), 1)
-        matrix[v.v].es.splice(matrix[v.v].es.findIndex(e => e.v === u), 1)
-
-        E--
-
-        fleury(v.v, input)
-    })
-   
-        
-    
-}
-
-// const matrix = adjustInputMatrix(input, result)
-
-// fleury(findFirstV(matrix), matrix)
-
 
 
 const main = () => {
@@ -359,8 +293,8 @@ const main = () => {
         const newEdges = adjustResult(newRawEdges)
         // console.log(newEdges, "arestas ajustadas do hungaro")
         const newMatrix = parseToNewMatrix(input, newEdges)
-
-        fleury(0, newMatrix)
+        // newMatrix.forEach(a => console.log(a))
+        fleury(2, newMatrix)
 
         // now we ought to change our graph data structure representation, the simple adjacency matrix
         // does not handle multigraphs well, so we'll use a more suitable representation for them
@@ -373,4 +307,64 @@ const main = () => {
     }
 }
 
-main()
+// main()
+
+const isNexBridge = (v, visited, matrix) => {
+    let count = 1;
+
+    visited[v] = true;
+    matrix[v].es.forEach(e => {
+        if (!visited[e.v]) {
+            count += isNexBridge(e.v, visited, matrix)
+        }
+    })
+
+    return count;
+}
+
+const removeEdge = (edge, matrix) => {
+    matrix[edge.u].es.splice(matrix[edge.u].es.findIndex(e => e.v === edge.v), 1)
+    matrix[edge.v].es.splice(matrix[edge.v].es.findIndex(e => e.v === edge.u), 1)
+}
+
+const addEdge = (edge, matrix) => {
+    matrix[edge.u].es.push({v: edge.v})
+    matrix[edge.v].es.push({v: edge.u})
+}
+
+const isValidEdge = (v, u, matrix) => {
+    removeEdge({v, u}, matrix)
+    let visited = matrix.map(l => false)
+    const c1 = isNexBridge(u, visited, matrix)
+
+    addEdge({v, u}, matrix)
+    visited = matrix.map(l => false)
+    const c2 = isNexBridge(u, visited, matrix)
+
+    return c1 === c2
+}
+
+const fleury = (u, matrix) => {
+
+    console.log(u, " ")
+
+    if (!matrix[u].es.length) return
+
+    if (matrix[u].es.length === 1) {
+        const v = matrix[u].es[0].v
+        removeEdge({u, v}, matrix)
+        fleury(v, matrix)
+        return;
+    }
+
+    matrix[u].es.forEach(e => {
+        if (isValidEdge(u, e.v, matrix)) {
+            removeEdge({u, v: e.v}, matrix)
+            fleury(e.v, matrix)
+            return
+        }
+    })
+
+}
+
+fleury(0, parseToNewMatrix(input, adjustResult(hungarian(buildCostMatrix(input)))))
