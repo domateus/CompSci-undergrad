@@ -1,0 +1,30 @@
+clear;
+clc;
+format short;
+x = [1 2 3 4 5 6 7 8]';
+y = [0.5 0.6 0.9 0.8 1.2 1.5 1.7 2]';
+n = size(x, 1);
+A = zeros(n, 3);
+
+A(:, 1) = x.^2;
+A(:, 2) = x;
+A(:, 3) = 1;
+B = y;
+
+X = inv(A'*A)*(A'*B);
+
+a2 = X(1);
+a1 = X(2);
+a0 = X(3);
+
+xa = min(x):(max(x) - min(x))/100:max(x);
+ya = a2 * xa.^2 + a1 * xa + a0;
+
+plot(x, y, '*b', xa, ya, '-r')
+
+Ya = a2 * xa.^2 + a1*x + a0;
+s1 = sum((y - Ya).^2);
+s2 = sum((y).^2);
+s3 = sum(y).^2;
+
+r2 = 1 - ((n*s1)/(n*s2 - s3))

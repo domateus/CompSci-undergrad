@@ -1,0 +1,131 @@
+clear;
+clc;
+format short;
+x = [1 1.2 1.4 1.6 1.8 2 2.2 2.4 2.6 2.8 3]';
+y = [0.525 0.8448 1.2807 1.8634 2.6326 3.6386 4.944 6.6258 8.7768 11.5076 14.9484]';
+n = size(x, 1);
+A = zeros(n, 2);
+
+A(:, 1) = x;
+A(:, 2) = 1;
+B = y;
+
+X = (A'*A)\(A'*B);
+
+k = X(1)
+a = X(2)
+
+xa = min(x):(max(x) - min(x))/100:max(x);
+fy = f(k, a);
+ya = fy(xa);
+
+plot(x, y, '*b', xa, ya, '-r')
+
+Ya = fy(x);
+s1 = sum((y - Ya).^2);
+s2 = sum((y).^2);
+s3 = sum(y).^2;
+
+r2 = 1 - ((n*s1)/(n*s2 - s3))
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+A(:, 1) = x;
+A(:, 2) = 1;
+B = log(y);
+
+X = (A'*A)\(A'*B);
+
+k = X(1)
+a = X(2)
+
+xa = min(x):(max(x) - min(x))/100:max(x);
+fy = f(k, a);
+ya = exp(fy(xa));
+
+plot(x, y, '*b', xa, ya, '-r')
+
+Ya = exp(fy(x));
+s1 = sum((y - Ya).^2);
+s2 = sum((y).^2);
+s3 = sum(y).^2;
+
+r2 = 1 - ((n*s1)/(n*s2 - s3))
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+A(:, 1) = log(x);
+A(:, 2) = 1;
+B = y;
+
+X = (A'*A)\(A'*B);
+
+k = X(1)
+a = X(2)
+
+xa = min(x):(max(x) - min(x))/100:max(x);
+fy = f(k, a);
+ya = fy(log(xa));
+
+plot(x, y, '*b', xa, ya, '-r')
+
+Ya = fy(log(x));
+s1 = sum((y - Ya).^2);
+s2 = sum((y).^2);
+s3 = sum(y).^2;
+
+r2 = 1 - ((n*s1)/(n*s2 - s3))
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+A(:, 1) = log(x);
+A(:, 2) = 1;
+B = log(y);
+
+X = (A'*A)\(A'*B);
+
+k = X(1)
+a = X(2)
+
+xa = min(x):(max(x) - min(x))/100:max(x);
+fy = f(k, a);
+ya = exp(fy(log(xa)));
+
+plot(x, y, '*b', xa, ya, '-r')
+
+Ya = exp(fy(log(x)));
+s1 = sum((y - Ya).^2);
+s2 = sum((y).^2);
+s3 = sum(y).^2;
+
+r2 = 1 - ((n*s1)/(n*s2 - s3))
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+A(:, 1) = x;
+A(:, 2) = 1;
+B = y.*x;
+
+X = (A'*A)\(A'*B);
+
+k = X(1)
+a = X(2)
+
+xa = min(x):(max(x) - min(x))/100:max(x);
+fy = f(k, a);
+ya = fy(xa)./xa;
+
+plot(x, y, '*b', xa, ya, '-r')
+
+Ya = fy(x)./x;
+s1 = sum((y - Ya).^2);
+s2 = sum((y).^2);
+s3 = sum(y).^2;
+
+r2 = 1 - ((n*s1)/(n*s2 - s3))
+
+function y = square(x, a1, a0)
+    y = a1 * x + a0;
+end
+
+function out = f(a1, a0)
+    out = @magic;
+
+    function out = magic(x)
+        out = square(x, a1, a0);
+    end
+end
+
+

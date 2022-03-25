@@ -1,0 +1,32 @@
+clear;
+clc;
+format short;
+x = [1.5 2 2.5 3 3.5 4 4.5 5 5.5 6 6.5 7 7.5]';
+y = [1.043 2.552 7.224 13.18 18.54 22.33 22.94 20.24 14.83 10.02 6.071 2.358 1.607]';
+c = size(x, 1);
+A = zeros(c, 3);
+
+A(:, 1) = x.^2;
+A(:, 2) = log(x);
+A(:, 3) = 1;
+B = log(y);
+
+X = (A'*A)\(A'*B);
+
+c = X(1)
+b = X(2)
+a = X(3);
+aval = exp(a)
+
+xa = min(x):(max(x) - min(x))/100:max(x);
+
+ya = exp(c .* xa.^2 + b .* log(xa) + a);
+
+plot(x, y, '*b', xa, ya, '-r')
+
+Ya = exp(c .* x.^2 + b .* log(x) + a);
+s1 = sum((y - Ya).^2);
+s2 = sum((y).^2);
+s3 = sum(y).^2;
+
+r2 = 1 - ((c*s1)/(c*s2 - s3))

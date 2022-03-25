@@ -1,0 +1,43 @@
+clear;
+clc;
+format short;
+x = [13 15 16 21 23 25 29 30 31 36 40 42 55 60 62 64 70 72 100 130]';
+y = [11 10 11 12 13 13 12 14 16 17 13 14 22 14 21 21 25 17 23 34]';
+n = size(x, 1);
+A = zeros(n, 2);
+
+A(:, 1) = x;
+A(:, 2) = 1;
+B = y;
+
+X = (A'*A)\(A'*B);
+
+k = X(1)
+a = X(2)
+
+xa = min(x):(max(x) - min(x))/100:max(x);
+fy = f(k, a);
+ya = fy(xa);
+
+plot(x, y, '*b', xa, ya, '-r')
+
+Ya = fy(x);
+s1 = sum((y - Ya).^2);
+s2 = sum((y).^2);
+s3 = sum(y).^2;
+
+r2 = 1 - ((n*s1)/(n*s2 - s3))
+
+function y = square(x, a1, a0)
+    y = a1 * x + a0;
+end
+
+function out = f(a1, a0)
+    out = @magic;
+
+    function out = magic(x)
+        out = square(x, a1, a0);
+    end
+end
+
+

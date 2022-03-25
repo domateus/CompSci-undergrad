@@ -1,0 +1,77 @@
+clear;
+clc;
+format short;
+x = [1 2 3 4.1 5]';
+y = [70.2 93.1 119 146.2 169.8]';
+n = size(x, 1);
+A = zeros(n, 2);
+
+A(:, 1) = log(x);
+A(:, 2) = 1;
+B = log(y);
+
+X = inv(A'*A)*(A'*B);
+
+b = X(1)
+a = X(2)
+
+xa = min(x):(max(x) - min(x))/100:max(x);
+fy = b .* log(xa) + a;
+ya = exp(fy);
+
+plot(x, y, '*b', xa, ya, '-r')
+
+Ya = exp(b.*log(x) + a);
+s1 = sum((y - Ya).^2);
+s2 = sum((y).^2);
+s3 = sum(y).^2;
+
+r2 = 1 - ((n*s1)/(n*s2 - s3))
+
+y6 = exp(b*log(6) + a)
+
+
+%%%%%%%%%%%%%%%%%%%%%%%
+n = size(x, 1);
+A = zeros(n, 2);
+
+A(:, 1) = x;
+A(:, 2) = 1;
+B = log(y);
+
+X = inv(A'*A)*(A'*B);
+
+k = X(1);
+a = X(2);
+xa = min(x):(max(x) - min(x))/100:max(x);
+fy = f(k, a);
+ya = exp(fy(xa));
+
+plot(x, y, '*b', xa, ya, '-r')
+
+Ya = exp(fy(x));
+s1 = sum((y - Ya).^2);
+s2 = sum((y).^2);
+s3 = sum(y).^2;
+
+r2 = 1 - ((n*s1)/(n*s2 - s3))
+
+y6 = exp(fy(6))
+syms t;
+df = diff(exp(fy(t)), t);
+d = vpa(subs(df,[t],[3]))
+
+
+
+function y = square(x, a1, a0)
+    y = a1 * x + a0;
+end
+
+function out = f(a1, a0)
+    out = @magic;
+
+    function out = magic(x)
+        out = square(x, a1, a0);
+    end
+end
+

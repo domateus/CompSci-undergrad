@@ -1,0 +1,48 @@
+clear;
+clc;
+format short;
+x = [0 2 4 6 8 10 12]';
+y = [1 0.79 0.63 0.5 0.4 0.32 0.25]';
+n = size(x, 1);
+A = zeros(n, 2);
+
+A(:, 1) = x;
+A(:, 2) = 1;
+B = log(y);
+
+X = inv(A'*A)*(A'*B);
+
+k = X(1)
+a = X(2);
+aval = exp(a)
+
+xa = min(x):(max(x) - min(x))/100:max(x);
+fy = f(k, a);
+ya = exp(fy(xa));
+
+plot(x, y, '*b', xa, ya, '-r')
+
+Ya = exp(fy(x));
+s1 = sum((y - Ya).^2);
+s2 = sum((y).^2);
+s3 = sum(y).^2;
+
+r2 = 1 - ((n*s1)/(n*s2 - s3))
+
+y35 = exp(fy(3.5))
+
+
+
+
+function y = square(x, a1, a0)
+    y = a1 * x + a0;
+end
+
+function out = f(a1, a0)
+    out = @magic;
+
+    function out = magic(x)
+        out = square(x, a1, a0);
+    end
+end
+

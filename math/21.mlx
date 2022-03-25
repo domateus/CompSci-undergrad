@@ -1,0 +1,131 @@
+clear;
+clc;
+format short;
+x = [0 5 10 25 30 35]';
+y = [1.00762 1.00392 1.00153 0.99852 0.99826 0.99818]';
+n = size(x, 1);
+A = zeros(n, 2);
+
+% Linear
+
+A(:, 1) = x;
+A(:, 2) = 1;
+B = y;
+
+X = inv(A'*A)*(A'*B);
+
+k = X(1)
+a = X(2)
+
+xa = min(x):(max(x) - min(x))/100:max(x);
+fy = f(k, a);
+ya = fy(xa);
+
+plot(x, y, '*b', xa, ya, '-r')
+
+Ya = fy(x);
+s1 = sum((y - Ya).^2);
+s2 = sum((y).^2);
+s3 = sum(y).^2;
+
+r2 = 1 - ((n*s1)/(n*s2 - s3))
+
+t15 = fy(15)
+
+% Quadrático
+
+A(:, 1) = x.^2;
+A(:, 2) = x;
+A(:, 3) = 1;
+B = y;
+
+X = inv(A'*A)*(A'*B);
+
+k = X(1)
+a = X(2)
+b = X(3)
+
+xa = min(x):(max(x) - min(x))/100:max(x);
+ya = k .* xa.^2 + a .* xa + b;
+
+plot(x, y, '*b', xa, ya, '-r')
+
+Ya = k .* x.^2 + a .* x + b;
+s1 = sum((y - Ya).^2);
+s2 = sum((y).^2);
+s3 = sum(y).^2;
+
+r2 = 1 - ((n*s1)/(n*s2 - s3))
+
+t15 = k * 15^2 + + a * 15 + b
+
+% Cúbico
+
+A(:, 1) = x.^3;
+A(:, 2) = x.^2;
+A(:, 3) = x;
+A(:, 4) = 1;
+B = y;
+
+X = inv(A'*A)*(A'*B);
+
+k = X(1)
+a = X(2)
+b = X(3)
+c = X(4)
+
+xa = min(x):(max(x) - min(x))/100:max(x);
+ya = k .* xa.^3 + a .* xa.^2 + b .* xa + c;
+
+plot(x, y, '*b', xa, ya, '-r')
+
+Ya = k .* x.^3 + a .* x.^2 + b .* x + c;
+s1 = sum((y - Ya).^2);
+s2 = sum((y).^2);
+s3 = sum(y).^2;
+
+r2 = 1 - ((n*s1)/(n*s2 - s3))
+
+t15 = k .* 15.^3 + a .* 15.^2 + b .* 15 + c
+
+% Exponencial
+
+A = zeros(n, 2);
+A(:, 1) = x;
+A(:, 2) = 1;
+B = log(y);
+
+X = inv(A'*A)*(A'*B);
+
+k = X(1)
+a = X(2);
+aval = exp(a)
+
+xa = min(x):(max(x) - min(x))/100:max(x);
+fy = f(k, a);
+ya = exp(fy(xa));
+
+plot(x, y, '*b', xa, ya, '-r')
+
+Ya = exp(fy(x));
+s1 = sum((y - Ya).^2);
+s2 = sum((y).^2);
+s3 = sum(y).^2;
+
+r2 = 1 - ((n*s1)/(n*s2 - s3))
+
+t15 = exp(fy(15))
+
+function y = square(x, a1, a0)
+    y = a1 * x + a0;
+end
+
+function out = f(a1, a0)
+    out = @magic;
+
+    function out = magic(x)
+        out = square(x, a1, a0);
+    end
+end
+
+

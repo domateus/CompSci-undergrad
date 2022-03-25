@@ -1,0 +1,71 @@
+clear;
+clc;
+format short;
+x = [3.8 7.0 9.5 11.3 17.5 31.5 45.5 64 95]';
+y = [10 12.5 13.5 14 15 16 16.5 17 17.5]';
+n = size(x, 1);
+A = zeros(n, 2);
+
+A(:, 1) = x;
+A(:, 2) = 1;
+B = log(y);
+
+X = inv(A'*A)*(A'*B);
+
+b = X(1);
+a = X(2);
+
+xa = min(x):(max(x) - min(x))/100:max(x);
+fy = f(b, a);
+ya = exp(fy(xa));
+
+plot(x, y, '*b', xa, ya, '-r')
+
+Ya = exp(fy(x));
+s1 = sum((y - Ya).^2);
+s2 = sum((y).^2);
+s3 = sum(y).^2;
+
+r2 = 1 - ((n*s1)/(n*s2 - s3))
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+n = size(x, 1);
+A = zeros(n, 2);
+
+A(:, 1) = x;
+A(:, 2) = 1;
+B = x./y;
+
+X = inv(A'*A)*(A'*B);
+
+b = X(1);
+a = X(2);
+
+xa = min(x):(max(x) - min(x))/100:max(x);
+fy = f(b, a);
+ya = fy(xa).^-1 .* xa;
+
+plot(x, y, '*b', xa, ya, '-r')
+
+Ya = fy(x).^-1 .* x;
+s1 = sum((y - Ya).^2);
+s2 = sum((y).^2);
+s3 = sum(y).^2;
+
+r2 = 1 - ((n*s1)/(n*s2 - s3))
+
+
+
+
+function y = square(x, a1, a0)
+    y = a1 * x + a0;
+end
+
+function out = f(a1, a0)
+    out = @magic;
+
+    function out = magic(x)
+        out = square(x, a1, a0);
+    end
+end
