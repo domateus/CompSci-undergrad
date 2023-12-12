@@ -1,88 +1,100 @@
-import React, {useEffect, useRef} from 'react';
+import React, {useEffect} from 'react';
 import {StatusBar} from 'react-native';
 import {BigInteger} from 'jsbn';
-
-import Home from './src/screen/Home';
 import {NavigationContainer} from '@react-navigation/native';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import Login from './src/screen/Login';
 import theme from './src/theme';
 import Chat from './src/screen/Chat';
-import {io} from 'socket.io-client';
+import session from './src/observable/session';
+import contacts from './src/observable/contacts';
+import * as DH from './src/cipher/diffieHellman';
+import {observer} from 'mobx-react-lite';
+import 'react-native-get-random-values';
+import Contacts from './src/screen/Contacts'; // necessary for global.crypto.getRandomValues
 
-const socket = io('http://fast-chamber-80133.herokuapp.com/');
-
-function App(): JSX.Element {
+const App = observer(() => {
   const Stack = createNativeStackNavigator<RootStackParamList>();
-  const hasDSAKeysRef = useRef(false);
 
   useEffect(() => {
-    socket.emit('hi');
+    if (!session.socket) {
+      return;
+    }
+    session.socket.emit('hi');
+    session.socket.on(
+      'psks',
+      ({dh, dsa}: {dh: DHContants; dsa: DSAContants}) => {
+        session.setDHConstants({p: dh.p, q: dh.q, a: DH.secretKey()});
 
-    socket.on('psks', ({dh, dsa: DSA}) => {
-      if (hasDSAKeysRef.current) {
-        return;
-      }
-      hasDSAKeysRef.current = true;
-      dispatch(
-        sessionActions.setDHConstants({p: dh.p, q: dh.q, a: DH.secretKey()}),
-      );
-      const x = new BigInteger(
-        window.crypto.getRandomValues(new Uint32Array(1))[0].toString(16),
-        16,
-      );
-      const y = new BigInteger(DSA.g, 16).modPow(x, new BigInteger(DSA.p, 16));
-      dispatch(
-        sessionActions.setDSAConstants({
-          ...DSA,
+        const x = new BigInteger(
+          global.crypto.getRandomValues(new Uint32Array(1))[0].toString(16),
+          16,
+        );
+        const y = new BigInteger(dsa.g, 16).modPow(
+          x,
+          new BigInteger(dsa.p, 16),
+        );
+        session.setDSAConstants({
+          ...dsa,
           x: x.toString(16).padStart(256, '0'),
           y: y.toString(16).padStart(256, '0'),
-        }),
-      );
+        });
+      },
+    );
+    session.socket.on('users', users => {
+      contacts.setContacts(users);
     });
-    socket.on('users', users => {
-      dispatch(contactsActions.set(users));
+    session.socket.on('new-user', newUser => {
+      contacts.addContact(newUser);
     });
-    socket.on('new-user', newUser => {
-      dispatch(contactsActions.push(newUser));
+    session.socket.on('user-disconnected', userToRemove => {
+      contacts.removeContact(userToRemove);
     });
-    socket.on('user-disconnected', userToRemove => {
-      dispatch(contactsActions.remove(userToRemove));
-    });
-    hasDefinedName && socket.emit('get-users', user);
-    socket.on('disconnect', console.log);
+    session.socket.on('disconnect', console.log);
 
     return () => {
-      socket.off('users');
-      socket.off('new-user');
-      socket.off('user-disconnected');
-      socket.off('disconnect');
-      socket.off('dhpsk');
+      if (session.socket) {
+        session.socket.off('users');
+        session.socket.off('new-user');
+        session.socket.off('user-disconnected');
+        session.socket.off('disconnect');
+        session.socket.off('dhpsk');
+      }
     };
-  }, [dispatch, user, hasDefinedName]);
+  }, []);
+
   return (
     <NavigationContainer>
-      <StatusBar backgroundColor={theme.COLORS.GRAY_700} />
+      <StatusBar backgroundColor={theme.COLORS.DARK} />
       <Stack.Navigator initialRouteName="Login">
         <Stack.Screen
           name="Login"
           component={Login}
           options={navigatorOptions}
         />
-        <Stack.Screen name="Home" component={Home} options={navigatorOptions} />
-        <Stack.Screen name="Chat" component={Chat} options={navigatorOptions} />
+        <Stack.Screen
+          name="Contacts"
+          component={Contacts}
+          options={navigatorOptions}
+        />
+        <Stack.Screen
+          name="Chat"
+          component={Chat}
+          options={{...navigatorOptions, title: session.userToChat}}
+        />
       </Stack.Navigator>
     </NavigationContainer>
   );
-}
+});
 
 export default App;
 
 const navigatorOptions = {
   headerStyle: {
-    backgroundColor: theme.COLORS.GRAY_700,
+    backgroundColor: theme.COLORS.DARK,
   },
   headerTitleStyle: {
-    color: theme.COLORS.RED_DARK,
+    color: theme.COLORS.WHITE,
   },
+  headerTintColor: theme.COLORS.WHITE,
 };

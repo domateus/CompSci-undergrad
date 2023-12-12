@@ -1,32 +1,15 @@
 import {observer} from 'mobx-react-lite';
-import React, {useState} from 'react';
-import {Button, Text, View} from 'react-native';
-import {Socket} from 'socket.io-client';
-import {ContactsProps} from '../../observable/contacts';
+import React from 'react';
+import {Text, View} from 'react-native';
+import contacts from '../../observable/contacts';
+import Contact from '../Contact';
 
-type ContactListProps = {
-  contacts: ContactsProps;
-  socket?: Socket<DefaultEventsMap, DefaultEventsMap>;
-};
-
-const ContactList = observer(({contacts}: ContactListProps) => {
-  if (!contacts.list.length) {
-    return <EmptyContactList />;
-  }
-
+const ContactList = observer(() => {
   return contacts.list.map(contact => (
     <View key={contact.id}>
-      <Text>{contact.name}</Text>
+      <Contact contact={contact} />
     </View>
   ));
 });
 
 export default ContactList;
-
-function EmptyContactList() {
-  return (
-    <View>
-      <Text>No contacts</Text>
-    </View>
-  );
-}

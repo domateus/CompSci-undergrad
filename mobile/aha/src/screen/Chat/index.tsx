@@ -1,15 +1,17 @@
-import React from 'react';
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
-import {Text, View} from 'react-native';
-
+import React from 'react';
+import Inbox from '../../components/Inbox';
+import {styles} from '../../utils/page-style';
+import {View} from 'react-native';
+import {observer} from 'mobx-react-lite';
 type Props = NativeStackScreenProps<RootStackParamList, 'Chat'>;
 
-const Chat = ({route, navigation}: Props) => {
+const Chat = observer(({}: Props) => {
   return (
-    <View>
-      <Text>Chat</Text>
+    <View style={styles.container}>
+      <Inbox />
     </View>
   );
-};
+});
 
 export default Chat;

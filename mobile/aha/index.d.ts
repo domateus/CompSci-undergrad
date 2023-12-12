@@ -1,5 +1,5 @@
 type RootStackParamList = {
-  Home: {username: string};
+  Contacts: {username: string};
   Login: undefined;
   Chat: undefined;
 };
@@ -56,7 +56,7 @@ type DHPSKPayload = {
 
 type Contact = {
   id?: number;
-  name?: string;
+  name: string;
   hasUnreadMessages?: boolean;
   canScrollToNewMessages?: boolean;
   keys?: AlgorithmKey[];
